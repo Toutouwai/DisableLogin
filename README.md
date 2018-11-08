@@ -9,3 +9,5 @@ Requires ProcessWire >= v3.0.62
 [Install](http://modules.processwire.com/install-uninstall/) the Disable Login module.
 
 In the module config select one or more roles to disable login for, or select "All non-superuser roles" if desired. Tip: to disable login for specific users, create a new role and give that role to the users, then select the role in the module config.
+
+![module-config](https://user-images.githubusercontent.com/1538852/48174384-a3dddf00-e36c-11e8-8f71-2b77729166b3.png)
