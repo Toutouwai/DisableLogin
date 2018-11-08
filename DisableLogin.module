@@ -1,0 +1,110 @@
+<?php namespace ProcessWire;
+
+/**
+ *
+ * Disable Login
+ *
+ * @author Robin Sallis
+ *
+ * ProcessWire 3.x
+ * Copyright (C) 2011 by Ryan Cramer
+ * Licensed under GNU/GPL v2, see LICENSE.TXT
+ *
+ * http://www.processwire.com
+ * http://www.ryancramer.com
+ *
+ */
+class DisableLogin extends WireData implements Module, ConfigurableModule {
+
+	public static function getModuleInfo() {
+		return array(
+			'title' => 'Disable login',
+			'version' => '0.1.0',
+			'summary' => 'Prevent selected roles from logging in. Logged-in users with those roles will be automatically logged out.',
+			'author' => 'Robin Sallis',
+			'icon' => 'window-close',
+			'autoload' => true,
+			'requires' => 'ProcessWire>=3.0.62'
+		);
+	}
+
+	/**
+	 * Construct
+	 */
+	public function __construct() {
+		$this->logout_message = $this->_('You have been logged out because your account has been disabled. Contact the system administrator for more information.');
+	}
+
+	/**
+	 * Ready
+	 */
+	public function ready() {
+		$this->addHookAfter('Page::render', $this, 'checkLogin');
+	}
+
+	/**
+	 * Check if the current user is allowed to be logged in
+	 *
+	 * @param HookEvent $event
+	 */
+	protected function checkLogin(HookEvent $event) {
+		$user = $this->wire()->user;
+
+		// Return early when possible
+		if(!$user->isLoggedin() || $user->isSuperuser() || !count($this->login_disabled_roles)) return;
+
+		// Disable login?
+		$disable_login = false;
+		if(in_array('non-superuser', $this->login_disabled_roles) ) {
+			$disable_login = true;
+		} else {
+			foreach($this->login_disabled_roles as $disabled_role) {
+				if($user->hasRole($disabled_role)) {
+					$disable_login = true;
+					break;
+				}
+			}
+		}
+		if(!$disable_login) return;
+
+		// Log out the user
+		$session = $this->wire()->session;
+		$current_url = $this->wire()->input->url(true);
+		$session->logout();
+		// Show logout message if user is in backend
+		if($this->logout_message && strpos($current_url, $this->wire()->config->urls->admin) === 0) {
+			$session->warning($this->logout_message);
+		}
+		$session->redirect($current_url, false);
+	}
+
+	/**
+	 * Config inputfields
+	 *
+	 * @param InputfieldWrapper $inputfields
+	 */
+	public function getModuleConfigInputfields($inputfields) {
+
+		/* @var InputfieldAsmSelect $f */
+		$f = $this->wire()->modules->InputfieldAsmSelect;
+		$f_name = 'login_disabled_roles';
+		$f->name = $f_name;
+		$f->label = $this->_('Roles with disabled login');
+		$f->description = $this->_('Tip: to disable login for specific users, create a new role and give that role to the users, then select the role here.');
+		$f->addOption('non-superuser', 'All non-superuser roles');
+		$f->addOptions($this->wire()->roles->find('name!=superuser|guest')->explode('name'), false);
+		$f->value = $this->$f_name;
+		$inputfields->add($f);
+
+		/* @var InputfieldText $f */
+		$f = $this->wire()->modules->InputfieldText;
+		$f_name = 'logout_message';
+		$f->name = $f_name;
+		$f->label = $this->_('Logout message');
+		$f->description = $this->_('Message shown to the user if they are forcibly logged out.');
+		$f->value = $this->$f_name;
+		$inputfields->add($f);
+
+	}
+
+}
