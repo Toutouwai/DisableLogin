@@ -18,7 +18,7 @@ class DisableLogin extends WireData implements Module, ConfigurableModule {
 
 	public static function getModuleInfo() {
 		return array(
-			'title' => 'Disable login',
+			'title' => 'Disable Login',
 			'version' => '0.1.0',
 			'summary' => 'Prevent selected roles from logging in. Logged-in users with those roles will be automatically logged out.',
 			'author' => 'Robin Sallis',
