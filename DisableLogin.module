@@ -19,7 +19,7 @@ class DisableLogin extends WireData implements Module, ConfigurableModule {
 	public static function getModuleInfo() {
 		return array(
 			'title' => 'Disable Login',
-			'version' => '0.1.1',
+			'version' => '0.1.2',
 			'summary' => 'Prevent selected roles from logging in. Logged-in users with those roles will be automatically logged out.',
 			'author' => 'Robin Sallis',
 			'href' => 'https://github.com/Toutouwai/DisableLogin',
@@ -76,6 +76,8 @@ class DisableLogin extends WireData implements Module, ConfigurableModule {
 		if($this->logout_message && strpos($current_url, $this->wire()->config->urls->admin) === 0) {
 			$session->warning($this->logout_message);
 		}
+		// Avoid endless redirect if $current_url is login success page
+		if(strpos($current_url, '?login=1')) $current_url = $this->wire()->config->urls->admin;
 		$session->redirect($current_url, false);
 	}
 
